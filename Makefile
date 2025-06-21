@@ -1,0 +1,1 @@
+install :; forge install Cyfrin/foundry-devops openzeppelin/openzeppelin-contracts chiru-labs/ERC721A
