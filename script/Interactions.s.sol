@@ -20,4 +20,3 @@ contract MintRecord is Script {
         vm.stopBroadcast();
     }
 }
-

@@ -6,7 +6,6 @@ pragma solidity ^0.8.24;
 // Basic template, but finish the AlbumTemplate contract first
 // also will need a way to resell the albums/records
 
-
 // contract AlbumFactory {
 //     mapping(string => address) public albums;
 

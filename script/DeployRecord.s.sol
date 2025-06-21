@@ -14,14 +14,7 @@ contract DeployRecord is Script {
         address initialOwner
     ) external returns (Record) {
         vm.startBroadcast();
-        Record record = new Record(
-            name,
-            symbol,
-            baseURI,
-            maxSupply,
-            mintPrice,
-            initialOwner
-        );
+        Record record = new Record(name, symbol, baseURI, maxSupply, mintPrice, initialOwner);
         vm.stopBroadcast();
         return record;
     }

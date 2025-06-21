@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-
-
 // Layout of Contract:
 // version
 // imports
@@ -28,7 +26,6 @@ pragma solidity ^0.8.24;
 import {ERC721A} from "@ERC721A/contracts/ERC721A.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 error MustMintMoreThanZero();
 error CantMintMoreThanMaxSupply();
 error InsufficientBalance();
@@ -44,8 +41,6 @@ contract Record is ERC721A, Ownable {
     string private s_baseURI;
 
     // mapping(uint256 => string) private s_tokenIdToURI;
-
-
 
     constructor(
         string memory name,
@@ -63,17 +58,17 @@ contract Record is ERC721A, Ownable {
 
     // -------- Public Mint -------- //
     function mint(uint256 quantity) external payable {
-        if(quantity <= 0) {
+        if (quantity <= 0) {
             revert MustMintMoreThanZero();
         }
-        if(quantity + totalSupply() > s_maxSupply) {
+        if (quantity + totalSupply() > s_maxSupply) {
             revert CantMintMoreThanMaxSupply();
         }
-        if(msg.value < s_mintPrice * quantity) {
+        if (msg.value < s_mintPrice * quantity) {
             revert InsufficientBalance();
         }
 
-       // uint256 startId = _nextTokenId();
+        // uint256 startId = _nextTokenId();
         _mint(msg.sender, quantity);
 
         // for (uint256 i = 0; i < quantity; i++) {
@@ -97,7 +92,6 @@ contract Record is ERC721A, Ownable {
     //     }
 
     //     s_tokenCounter += quantity;
-    
 
     function increaseSupply(uint256 newMaxSupply) external onlyOwner {
         if (newMaxSupply <= s_maxSupply) {
@@ -122,7 +116,6 @@ contract Record is ERC721A, Ownable {
     function tokenCount() external view returns (uint256) {
         return s_tokenCount;
     }
-
 
     // function tokenURI(uint256 tokenId) public view override returns (string memory) {
     //     if (!_exists(tokenId)) {
