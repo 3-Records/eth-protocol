@@ -22,7 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make install --no-commit --no-merge
+          make install
 
       - name: Show Forge version
         run: |
