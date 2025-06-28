@@ -26,34 +26,42 @@ pragma solidity ^0.8.24;
 import {ERC721A} from "@ERC721A/contracts/ERC721A.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-error MustMintMoreThanZero();
-error CantMintMoreThanMaxSupply();
-error InsufficientBalance();
-error TokenDoesNotExist();
-error CantDecreaseMaxSupply();
 
 contract Record is ERC721A, Ownable {
-    uint256 private s_maxSupply;
+    error SupplyMustBeGreaterThanZero();
+    error MintPriceMustBeGreaterThanZero();
+    error MustMintMoreThanZero();
+    error CantMintMoreThanSupply();
+    error InsufficientBalance();
+    error TokenDoesNotExist();
+    error CannotChangePriceWhenSoldOut();
+    
+    
+    uint256 private s_supply;
     uint256 private s_mintPrice;
-    uint256 private s_tokenCount;
-
-    // maybe shouldbe immutable
     string private s_baseURI;
 
-    // mapping(uint256 => string) private s_tokenIdToURI;
+    event RecordSoldOut();
+
+    
 
     constructor(
         string memory name,
         string memory symbol,
-        string memory baseURI_,
-        uint256 initialMaxSupply,
-        uint256 initialMintPrice,
-        address initialOwner
-    ) ERC721A(name, symbol) Ownable(initialOwner) {
-        s_baseURI = baseURI_;
-        s_maxSupply = initialMaxSupply;
-        s_mintPrice = initialMintPrice;
-        s_tokenCount = 0;
+        string memory baseURI,
+        uint256 _supply,
+        uint256 _mintPrice,
+        address owner
+    ) ERC721A(name, symbol) Ownable(owner) {
+        if(_supply <= 0) {
+            revert SupplyMustBeGreaterThanZero();
+        }
+        if(_mintPrice <= 0) {
+            revert MintPriceMustBeGreaterThanZero();
+        }
+        s_supply = _supply;
+        s_mintPrice = _mintPrice;
+        s_baseURI = baseURI;
     }
 
     // -------- Public Mint -------- //
@@ -61,71 +69,57 @@ contract Record is ERC721A, Ownable {
         if (quantity <= 0) {
             revert MustMintMoreThanZero();
         }
-        if (quantity + totalSupply() > s_maxSupply) {
-            revert CantMintMoreThanMaxSupply();
+        if (quantity + _nextTokenId() > s_supply) {
+            revert CantMintMoreThanSupply();
         }
         if (msg.value < s_mintPrice * quantity) {
             revert InsufficientBalance();
         }
 
-        // uint256 startId = _nextTokenId();
         _mint(msg.sender, quantity);
-
-        // for (uint256 i = 0; i < quantity; i++) {
-        //     s_tokenIdToURI[startId + i] = i_baseURI;
-        // }
-
-        s_tokenCount += quantity;
-    }
-
-    // // -------- Admin Mint -------- //
-    // function ownerMint(uint256 quantity, string[] calldata uris) external onlyOwner {
-    //     require(quantity > 0, "Must mint at least 1");
-    //     require(quantity == uris.length, "Quantity and URIs length mismatch");
-    //     require(totalSupply() + quantity <= s_maxSupply, "Exceeds max supply");
-
-    //     uint256 startId = _nextTokenId();
-    //     _mint(msg.sender, quantity);
-
-    //     for (uint256 i = 0; i < quantity; i++) {
-    //         s_tokenIdToURI[startId + i] = uris[i];
-    //     }
-
-    //     s_tokenCounter += quantity;
-
-    function increaseSupply(uint256 newMaxSupply) external onlyOwner {
-        if (newMaxSupply <= s_maxSupply) {
-            revert CantDecreaseMaxSupply();
+    
+        if (_nextTokenId() == s_supply) {
+            emit RecordSoldOut();
         }
-        s_maxSupply = newMaxSupply;
     }
 
-    // -------- Read Functions (Getters) -------- //
-    function maxSupply() external view returns (uint256) {
-        return s_maxSupply;
+    function withdraw() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+    }
+
+    function changeMintPrice(uint256 newMintPrice) external onlyOwner {
+        if (_nextTokenId() == s_supply) {
+            revert CannotChangePriceWhenSoldOut();
+        }
+        if (newMintPrice <= 0) {
+            revert MintPriceMustBeGreaterThanZero();
+        }
+        // emit price chnage?
+        s_mintPrice = newMintPrice;
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return s_baseURI;
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        if (!_exists(tokenId)) {
+            revert TokenDoesNotExist();
+        }
+        return string(abi.encodePacked(_baseURI(), _toString(tokenId), ".json"));
+    }
+    
+    function supply() external view returns (uint256) {
+        return s_supply;
     }
 
     function mintPrice() external view returns (uint256) {
         return s_mintPrice;
     }
 
-    function baseURI() external view returns (string memory) {
-        return s_baseURI;
-    }
-
     function tokenCount() external view returns (uint256) {
-        return s_tokenCount;
+        return _nextTokenId();
     }
 
-    // function tokenURI(uint256 tokenId) public view override returns (string memory) {
-    //     if (!_exists(tokenId)) {
-    //         revert TokenDoesNotExist();
-    //     }
-    //     return s_tokenIdToURI[tokenId];
-    // }
-
-    // -------- Withdraw -------- //
-    function withdraw() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
-    }
+   
 }

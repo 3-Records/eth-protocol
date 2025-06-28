@@ -5,109 +5,174 @@ import {Test} from "forge-std/Test.sol";
 import {Record} from "src/Record.sol";
 import {DeployRecord} from "script/DeployRecord.s.sol";
 import {MintRecord} from "script/Interactions.s.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RecordTest is Test {
     DeployRecord deployer;
     Record record;
     MintRecord mintRecord;
 
+    string public constant name = "Test Record";
+    string public constant symbol = "TEST";
+    uint256 public constant supply = 1000;
+    uint256 public constant mintPrice = 0.01 ether;
+    uint256 public constant newMintPrice = 0.02 ether;
+    string public constant baseURI = "ipfs://QmdKR4KsvENPGBLzF9nrGLcDcFTexWwfBo7jjkPec5M3C8/";
+
     address public user = makeAddr("user");
     address public owner = makeAddr("owner");
+    uint256 public constant startingBalance = 1000 ether;
 
-    string public constant name = "Test";
-    string public constant symbol = "TEST";
-    uint256 public constant maxSupply = 1000;
-    uint256 public constant mintPrice = 0.01 ether;
-
-    uint256 public constant startingBalance = 1 ether;
-    uint256 public constant quantity1 = 1;
-    uint256 public constant quantity5 = 5;
-
-    string public constant recordURI = "ipfs://QmRNL5ztx3PHW6LdKwrYN3txxwHT4rSTMYndxt17GafMBc?filename=testrecord.json";
-
-    // event emitted by ERC721.sol during token transfer
+    // event emitted by ERC721A.sol during token transfer
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     function setUp() public {
-        deployer = new DeployRecord();
-        record = deployer.run(name, symbol, recordURI, maxSupply, mintPrice, owner);
-
+        record = new Record(name, symbol, baseURI, supply, mintPrice, owner);
+        
         vm.deal(user, startingBalance);
+        vm.deal(owner, startingBalance);
     }
 
-    function testNameIsCorrect() public view {
-        bytes32 expectedNameHash = keccak256(abi.encodePacked("Test"));
-        bytes32 actualNameHash = keccak256(abi.encodePacked(record.name()));
-        assert(expectedNameHash == actualNameHash);
+    function testDeployRevertsIfSupplyIsZero() public {
+        vm.expectRevert(Record.SupplyMustBeGreaterThanZero.selector);
+        new Record(name, symbol, baseURI, 0, mintPrice, owner);
     }
 
-    function testSymbolIsCorrect() public view {
-        bytes32 expectedSymbolHash = keccak256(abi.encodePacked("TEST"));
-        bytes32 actualSymbolHash = keccak256(abi.encodePacked(record.symbol()));
-        assert(expectedSymbolHash == actualSymbolHash);
+    function testDeployRevertsIfMintPriceIsZero() public {
+        vm.expectRevert(Record.MintPriceMustBeGreaterThanZero.selector);
+        new Record(name, symbol, baseURI, supply, 0, owner);
     }
 
-    function testMintdHasBalance() public {
+    function testInitialState() public view {
+        assertEq(record.supply(), supply);
+        assertEq(record.mintPrice(), mintPrice);
+        assertEq(record.tokenCount(), 0);
+    }
+
+    function testMintUpdatesTokenCountAndBalance() public {
+        uint256 quantity = 1;
         vm.prank(user);
-        record.mint{value: mintPrice}(quantity1);
-        assert(record.balanceOf(user) == 1);
+        record.mint{value: mintPrice}(quantity);
+
+        assertEq(record.balanceOf(user), quantity);
     }
 
-    // Update stiff with URI as i have to have a system with different URIs for each token
-    function testMintHasCorrectBaseURI() public {
+    function testMintMultipleUpdatesTokenCountAndBalance() public {
+        uint256 quantity = 2;
+        uint256 price = mintPrice * quantity;
         vm.prank(user);
-        record.mint{value: mintPrice}(quantity1);
-        assertEq(record.baseURI(), recordURI);
+        record.mint{value: price * quantity}(quantity);
+
+        assertEq(record.balanceOf(user), quantity);
+        assertEq(record.tokenCount(), quantity);
     }
+
 
     function testMintEmitsTransferEvent() public {
-        // Expect Transfer event: from the zero address to USER for tokenId 0
+        // Expect Transfer event from the zero address to user for tokenId 0
         vm.prank(user);
         vm.expectEmit(true, true, true, true);
         emit Transfer(address(0), user, 0);
-        record.mint{value: mintPrice}(quantity1);
+        record.mint{value: mintPrice}(1);
     }
 
-    // // Test that minting multiple NFTs increments token IDs and balances
-    // function testMintingMultipleTokensIncrementsTokenIdAndHasTheCorrectBalance() public {
-    //     vm.prank(USER);
-    //     basicNFT.mintNFT(cuteStar);
-    //     vm.prank(USER);
-    //     basicNFT.mintNFT(cuteStar);
 
-    //     assertEq(basicNFT.balanceOf(USER), 2);
-    //     assertEq(keccak256(abi.encodePacked(basicNFT.tokenURI(1))), keccak256(abi.encodePacked(cuteStar)));
-    // }
+    function testMintRevertsIfQuantityIsZero() public {
+        vm.expectRevert(Record.MustMintMoreThanZero.selector);
+        vm.prank(user);
+        record.mint{value: 0}(0);
+    }
 
-    //     function testTokenURIRevertsForNonExistentTokenDuringTransfer() public {
-    //         address scott = makeAddr("scott");
 
-    //         // no token has been minted yet
-    //         vm.expectRevert();
-    //         vm.prank(USER);
-    //         basicNFT.transferFrom(USER, scott, 0);
-    //     }
+    function testMintRevertsIfQuantityExceedsSupply() public {
+        uint256 amountToMint = supply + 1;
+        uint256 payment = mintPrice * amountToMint;
+        vm.expectRevert(Record.CantMintMoreThanSupply.selector);
+        vm.prank(user);
+        record.mint{value: payment}(amountToMint);
+    }
+    
 
-    //     function testTransferNFT() public {
-    //         address scott = makeAddr("scott");
+    function testMintFailsIfInsufficientFunds() public {
+        uint256 payment = mintPrice - 1;
+        vm.expectRevert(Record.InsufficientBalance.selector);
+        vm.prank(user);
+        record.mint{value: payment}(1);
+    }
 
-    //         vm.prank(USER);
-    //         basicNFT.mintNFT(cuteStar);
-    //         uint256 tokenId = 0;
+    function testTokenURI() public {
+        string memory expectedURI = string(abi.encodePacked("ipfs://QmdKR4KsvENPGBLzF9nrGLcDcFTexWwfBo7jjkPec5M3C8/0.json"));
+        vm.prank(user);
+        record.mint{value: mintPrice}(1);
 
-    //         vm.prank(USER);
-    //         basicNFT.transferFrom(USER, scott, tokenId);
+        string memory uri = record.tokenURI(0);
+        assertEq(uri, expectedURI); 
+    }
 
-    //         assertEq(basicNFT.balanceOf(USER), 0);
-    //         assertEq(basicNFT.balanceOf(scott), 1);
-    //         assertEq(keccak256(abi.encodePacked(basicNFT.tokenURI(tokenId))), keccak256(abi.encodePacked(cuteStar)));
-    //     }
+    function testRevertsWhenTokenDoesNotExist() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Record.TokenDoesNotExist.selector, 0)
+        );
+        record.tokenURI(0);
+    }
 
-    //     function testMintEmitsTransferEvent() public {
-    //         // Expect Transfer event: from the zero address to USER for tokenId 0
-    //         vm.prank(USER);
-    //         vm.expectEmit(true, true, true, true);
-    //         emit Transfer(address(0), USER, 0);
-    //         basicNFT.mintNFT(cuteStar);
-    //     }
+    // all go to the contract now but addn royalties later
+    function testOwnerCanWithdraw() public {
+        uint256 initialBalance = address(owner).balance;
+        
+        uint256 mintAmount = 1;
+        vm.prank(user);
+        record.mint{value: mintPrice}(mintAmount);
+
+        vm.prank(owner);
+        record.withdraw();
+
+        uint256 finalBalance = address(owner).balance;
+        assertEq(finalBalance, initialBalance + mintPrice);
+    }
+
+    function testRevertsWhenNonOwnerWithdraws() public {
+        vm.prank(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user)
+        );
+        record.withdraw();
+    }
+
+    function testOwnerCanChangeMintPrice() public {
+        vm.prank(owner);
+        record.changeMintPrice(newMintPrice);
+        
+        assertEq(record.mintPrice(), newMintPrice);
+    }
+
+    function testRevertsWhenNonOwnerChangesMintPrice() public {
+        vm.prank(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user)
+        );
+        record.changeMintPrice(newMintPrice);
+    }
+
+    function testRevertsWhenChangedMintPriceIsZero() public {
+        vm.prank(owner);
+        vm.expectRevert(Record.MintPriceMustBeGreaterThanZero.selector);
+        record.changeMintPrice(0);
+    }
+
+    function testRevertsWhenChangingMintPriceAfterSoldOut() public {
+        uint256 payment = mintPrice * supply;
+        vm.prank(user);
+        record.mint{value: payment}(supply);
+
+        vm.expectRevert(Record.CannotChangePriceWhenSoldOut.selector);
+        vm.prank(owner);
+        record.changeMintPrice(newMintPrice);
+    }
+
+    
+
+
+    
 }
+

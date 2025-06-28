@@ -1,0 +1,8 @@
+ipfs daemon --> to start the node
+
+
+
+added and pinned QmXg97GmEx9w5Tyirpe9obkpnj7rf6JqeEXc3YxZrKdRrM images
+added and pinned QmPoDCJ87SYdTvQ5vdFWxKL3SQrmeNnf7P3RnUuAsfpTd3 songs
+added and pinned QmP8TLr9K2nFua1vhAvdGec3FFpkdHzb553FxVswU74i7T player.html
+added and pinned QmdKR4KsvENPGBLzF9nrGLcDcFTexWwfBo7jjkPec5M3C8 metadata

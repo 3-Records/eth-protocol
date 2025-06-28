@@ -1,0 +1,67 @@
+<!--   This would be so that other nft sites could play the music
+    
+    I want the ipfs link to be encrypted and and have to call my api to decrypt
+
+    or just use the nft as an access token
+
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Record - Timothy Keegan</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .album-cover {
+      width: 300px;
+      height: 300px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      animation: rotate 20s linear infinite;
+    }
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .tracklist {
+      width: 100%;
+      max-width: 600px;
+    }
+    .track {
+      margin-bottom: 15px;
+    }
+    audio {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- <img class="album-cover" src="ipfs://Qm.../cover.jpg" alt="Rotating Album Cover"> -->
+  <h1>Test Record</h1>
+  <h2>Timothy Keegan</h2>
+  <div class="tracklist">
+    <div class="track">
+      <p>1. Dogdays (1:57)</p>
+      <audio controls src="https://ipfs.io/ipfs/QmPoDCJ87SYdTvQ5vdFWxKL3SQrmeNnf7P3RnUuAsfpTd3/dogdays.ogg"></audio> <!-- I would want this to not be an ipfs gateway eventually, build my own resolver-->
+    </div>
+    <div class="track">
+      <p>2. Why Should I? (1:53)</p>
+      <audio controls src="https://ipfs.io/ipfs/QmPoDCJ87SYdTvQ5vdFWxKL3SQrmeNnf7P3RnUuAsfpTd3/why_should_i.ogg"></audio>
+    </div>
+    <div class="track">
+      <p>3. Lady May (2:36)</p>
+      <audio controls src="https://ipfs.io/ipfs/QmPoDCJ87SYdTvQ5vdFWxKL3SQrmeNnf7P3RnUuAsfpTd3/lady_may.ogg"></audio>
+    </div>
+  </div>
+</body>
+</html>

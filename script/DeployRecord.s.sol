@@ -9,12 +9,12 @@ contract DeployRecord is Script {
         string memory name,
         string memory symbol,
         string memory baseURI,
-        uint256 maxSupply,
+        uint256 supply,
         uint256 mintPrice,
         address initialOwner
     ) external returns (Record) {
         vm.startBroadcast();
-        Record record = new Record(name, symbol, baseURI, maxSupply, mintPrice, initialOwner);
+        Record record = new Record(name, symbol, baseURI, supply, mintPrice, initialOwner);
         vm.stopBroadcast();
         return record;
     }
