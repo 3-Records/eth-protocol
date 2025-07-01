@@ -3,12 +3,10 @@ pragma solidity ^0.8.18;
 
 import {Test} from "forge-std/Test.sol";
 import {Record} from "src/Record.sol";
-import {DeployRecord} from "script/DeployRecord.s.sol";
 import {MintRecord} from "script/Interactions.s.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RecordTest is Test {
-    DeployRecord deployer;
     Record record;
     MintRecord mintRecord;
 
