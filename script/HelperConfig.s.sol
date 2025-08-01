@@ -11,6 +11,7 @@ contract HelperConfig {
         string name;
         string symbol;
         string baseURI;
+        string previewImageURI;
         uint256 supply;
         uint256 mintPrice;
     }
@@ -24,6 +25,7 @@ contract HelperConfig {
             name: "Test Record",
             symbol: "TEST",
             baseURI: "ipfs://QmdKR4KsvENPGBLzF9nrGLcDcFTexWwfBo7jjkPec5M3C8/",
+            previewImageURI: "ipfs://QmZEyS8hagRvCL3dQuo232oECAzK1dWZvi5cxCGF9Dc8WF?=slap.PNG",
             supply: 1000,
             mintPrice: 0.01 ether
         });

@@ -35,20 +35,20 @@ contract Record is ERC721A, Ownable {
     error InsufficientBalance();
     error TokenDoesNotExist();
     error CannotChangePriceWhenSoldOut();
-    
-    
+
     uint256 private s_supply;
     uint256 private s_mintPrice;
     string private s_baseURI;
+    string private s_previewImageURI;
 
     event RecordSoldOut();
-
     
 
     constructor(
         string memory name,
         string memory symbol,
         string memory baseURI,
+        string memory previewImageURI_,
         uint256 _supply,
         uint256 _mintPrice,
         address owner
@@ -62,6 +62,7 @@ contract Record is ERC721A, Ownable {
         s_supply = _supply;
         s_mintPrice = _mintPrice;
         s_baseURI = baseURI;
+        s_previewImageURI = previewImageURI_;
     }
 
     // -------- Public Mint -------- //
@@ -108,6 +109,29 @@ contract Record is ERC721A, Ownable {
         }
         return string(abi.encodePacked(_baseURI(), _toString(tokenId), ".json"));
     }
+
+   function tokensOfOwner(address owner) external view returns (uint256[] memory) {
+        uint256 balance = balanceOf(owner);
+        uint256[] memory tokens = new uint256[](balance);
+        uint256 count = 0;
+
+        for (uint256 i = _startTokenId(); i < _nextTokenId(); i++) {
+            if (_exists(i)) {
+                // ✅ Use _ownershipOf, which infers correct owner even in batch mints
+                if (_ownershipOf(i).addr == owner) {
+                    tokens[count++] = i;
+                }
+            }
+        }
+
+        // Resize to actual owned count
+        assembly {
+            mstore(tokens, count)
+        }
+
+        return tokens;
+    }
+
     
     function supply() external view returns (uint256) {
         return s_supply;
@@ -119,6 +143,10 @@ contract Record is ERC721A, Ownable {
 
     function tokenCount() external view returns (uint256) {
         return _nextTokenId();
+    }
+
+    function previewImageURI() external view returns (string memory) {
+        return s_previewImageURI;
     }
 
    

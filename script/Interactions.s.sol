@@ -18,6 +18,7 @@ contract DeployRecord is Script {
             string memory name,
             string memory symbol,
             string memory baseURI,
+            string memory previewImageURI,
             uint256 supply,
             uint256 mintPrice
         ) = helperConfig.testConfig();
@@ -27,6 +28,7 @@ contract DeployRecord is Script {
             name: name,
             symbol: symbol,
             baseURI: baseURI,
+            previewImageURI: previewImageURI,
             supply: supply,
             mintPrice: mintPrice
         });
@@ -38,6 +40,7 @@ contract DeployRecord is Script {
             testConfig.name,
             testConfig.symbol,
             testConfig.baseURI,
+            testConfig.previewImageURI,
             testConfig.supply,
             testConfig.mintPrice
         );
@@ -50,12 +53,12 @@ contract DeployRecord is Script {
         string memory name,
         string memory symbol,
         string memory baseURI,
+        string memory previewImageURI,
         uint256 supply,
         uint256 mintPrice
     ) internal {
         vm.startBroadcast();
-        new Record(name, symbol, baseURI, supply, mintPrice, owner);
-        factory.deployRecord(owner, artist, name, symbol, baseURI, supply, mintPrice);
+        factory.deployRecord(owner, artist, name, symbol, baseURI, previewImageURI, supply, mintPrice);
         vm.stopBroadcast();
     }
 }

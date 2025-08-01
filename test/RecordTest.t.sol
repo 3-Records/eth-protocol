@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console2} from "forge-std/Test.sol";
 import {Record} from "src/Record.sol";
 import {MintRecord} from "script/Interactions.s.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -16,6 +16,7 @@ contract RecordTest is Test {
     uint256 public constant mintPrice = 0.01 ether;
     uint256 public constant newMintPrice = 0.02 ether;
     string public constant baseURI = "ipfs://QmdKR4KsvENPGBLzF9nrGLcDcFTexWwfBo7jjkPec5M3C8/";
+    string public constant previewImageURI = "ipfs://QmZEyS8hagRvCL3dQuo232oECAzK1dWZvi5cxCGF9Dc8WF?=slap.PNG";
 
     address public user = makeAddr("user");
     address public owner = makeAddr("owner");
@@ -25,26 +26,28 @@ contract RecordTest is Test {
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     function setUp() public {
-        record = new Record(name, symbol, baseURI, supply, mintPrice, owner);
-        
+        record = new Record(name, symbol, baseURI, previewImageURI, supply, mintPrice, owner);
+
         vm.deal(user, startingBalance);
         vm.deal(owner, startingBalance);
     }
 
     function testDeployRevertsIfSupplyIsZero() public {
         vm.expectRevert(Record.SupplyMustBeGreaterThanZero.selector);
-        new Record(name, symbol, baseURI, 0, mintPrice, owner);
+        new Record(name, symbol, baseURI, previewImageURI, 0, mintPrice, owner);
     }
 
     function testDeployRevertsIfMintPriceIsZero() public {
         vm.expectRevert(Record.MintPriceMustBeGreaterThanZero.selector);
-        new Record(name, symbol, baseURI, supply, 0, owner);
+        new Record(name, symbol, baseURI, previewImageURI, supply, 0, owner);
     }
 
     function testInitialState() public view {
         assertEq(record.supply(), supply);
         assertEq(record.mintPrice(), mintPrice);
         assertEq(record.tokenCount(), 0);
+        assertEq(record.owner(), owner);
+        assertEq(record.previewImageURI(), previewImageURI);
     }
 
     function testMintUpdatesTokenCountAndBalance() public {
@@ -166,6 +169,40 @@ contract RecordTest is Test {
         vm.expectRevert(Record.CannotChangePriceWhenSoldOut.selector);
         vm.prank(owner);
         record.changeMintPrice(newMintPrice);
+    }
+
+   function testCanGetTokensOfOwner(uint8 quantity1, uint8 quantity2, uint8 quantity3) public {
+
+        // Clamp quantities to avoid overflow
+        quantity1 = uint8(bound(quantity1, 1, 10));
+        quantity2 = uint8(bound(quantity2, 1, 10));
+        quantity3 = uint8(bound(quantity3, 1, 10));
+
+        // Clamp total so it doesn't exceed supply
+        uint256 totalMint = quantity1 + quantity2 + quantity3;
+        require(totalMint <= supply, "Too many tokens");
+
+        uint256 cost1 = uint256(quantity1) * mintPrice;
+
+
+        vm.prank(user);
+        record.mint{value: cost1}(quantity1);
+
+
+        uint256[] memory userTokens = record.tokensOfOwner(user);
+
+        for (uint256 i = 0; i < userTokens.length; i++) {
+            console2.log("userTokens[%s] = %s", i, userTokens[i]);
+        }
+
+
+        assertEq(userTokens.length, quantity1);
+
+
+        for (uint256 i = 0; i < userTokens.length; i++) {
+            assertEq(record.ownerOf(userTokens[i]), user);
+        }
+
     }
 
     

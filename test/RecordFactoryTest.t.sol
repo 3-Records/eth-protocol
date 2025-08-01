@@ -18,6 +18,7 @@ contract RecordFactoryTest is Test {
     uint256 public constant supply = 1000;
     uint256 public constant mintPrice = 0.01 ether;
     string public constant baseURI = "ipfs://QmdKR4KsvENPGBLzF9nrGLcDcFTexWwfBo7jjkPec5M3C8/";
+    string public constant previewImageURI = "ipfs://QmZEyS8hagRvCL3dQuo232oECAzK1dWZvi5cxCGF9Dc8WF?=slap.PNG";
 
     function setUp() public {
         factory = new RecordFactory();
@@ -39,6 +40,7 @@ contract RecordFactoryTest is Test {
             name,
             symbol,
             baseURI,
+            previewImageURI,
             supply,
             mintPrice
         );

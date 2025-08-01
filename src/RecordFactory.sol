@@ -6,7 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract RecordFactory is Ownable {
-    event RecordDeployed(address indexed album, string name, string artist, string symbol);
+    event RecordDeployed(address indexed record, string name, string artist, string symbol);
     
     constructor() Ownable(msg.sender) {}
 
@@ -17,6 +17,7 @@ contract RecordFactory is Ownable {
         string memory name,
         string memory symbol,
         string memory baseURI,
+        string memory previewImageURI,
         uint256 supply,
         uint256 mintPrice
     ) external onlyOwner {
@@ -24,6 +25,7 @@ contract RecordFactory is Ownable {
             name,
             symbol,
             baseURI,
+            previewImageURI,
             supply,
             mintPrice,
             owner
